@@ -53,10 +53,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "actionplanner.wsgi.application"
 
+_db_dir = Path(os.environ.get("DB_DIR", BASE_DIR))
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": _db_dir / "db.sqlite3",
     }
 }
 
@@ -85,7 +86,7 @@ if not DEBUG:
 
 # Media files (attachments)
 MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT", BASE_DIR / "media"))
 
 # Auth
 LOGIN_URL = "/accounts/login/"
