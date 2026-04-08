@@ -9,10 +9,27 @@ ENV_FILE=".env.prod"
 # --- Preflight checks ---
 
 if [ ! -f "$ENV_FILE" ]; then
-    echo "ERROR: $ENV_FILE not found."
-    echo "Copy .env.prod.example to .env.prod and fill in your values:"
-    echo "  cp .env.prod.example .env.prod"
-    exit 1
+    echo "$ENV_FILE not found. Generating from template..."
+    if [ ! -f .env.prod.example ]; then
+        echo "ERROR: .env.prod.example not found either."
+        exit 1
+    fi
+
+    GENERATED_SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(64))")
+    GENERATED_SUPERUSER_PW=$(python3 -c "import secrets; print(secrets.token_urlsafe(24))")
+
+    sed \
+        -e "s|change-me-run-python3-c-import-secrets-print-secrets-token-urlsafe-64|${GENERATED_SECRET_KEY}|" \
+        -e "s|change-me-to-a-strong-password|${GENERATED_SUPERUSER_PW}|" \
+        .env.prod.example > "$ENV_FILE"
+
+    echo "    Generated $ENV_FILE with random secrets."
+    echo "    IMPORTANT: Edit $ENV_FILE to set DJANGO_ALLOWED_HOSTS and DJANGO_SUPERUSER_EMAIL."
+    echo "    Superuser password: ${GENERATED_SUPERUSER_PW}"
+    echo "    (save this somewhere safe — it won't be shown again)"
+    echo ""
+    echo "    Re-run this script when ready."
+    exit 0
 fi
 
 # shellcheck source=/dev/null
@@ -20,13 +37,20 @@ source "$ENV_FILE"
 
 if [ "${DJANGO_SECRET_KEY:-}" = "change-me-run-python3-c-import-secrets-print-secrets-token-urlsafe-64" ]; then
     echo "ERROR: DJANGO_SECRET_KEY is still the placeholder value."
-    echo "Generate one with: python3 -c \"import secrets; print(secrets.token_urlsafe(64))\""
+    echo "Delete .env.prod and re-run this script to auto-generate, or set it manually."
     exit 1
 fi
 
 if [ "${DJANGO_SUPERUSER_PASSWORD:-}" = "change-me-to-a-strong-password" ]; then
     echo "ERROR: DJANGO_SUPERUSER_PASSWORD is still the placeholder value."
+    echo "Delete .env.prod and re-run this script to auto-generate, or set it manually."
     exit 1
+fi
+
+if [ "${DJANGO_ALLOWED_HOSTS:-}" = "yourdomain.com,www.yourdomain.com" ]; then
+    echo "WARNING: DJANGO_ALLOWED_HOSTS is still the example value."
+    echo "         Edit .env.prod to set your actual domain before going live."
+    echo ""
 fi
 
 echo "==> Building and starting containers..."
