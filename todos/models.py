@@ -52,7 +52,7 @@ class TodoItem(models.Model):
     estimation = models.DurationField(
         null=True,
         blank=True,
-        help_text="Estimated effort (e.g. 2:30:00 for 2h 30min)",
+        help_text="Estimated effort in days and hours",
     )
     position = models.IntegerField(default=0)
     recurrence = models.CharField(

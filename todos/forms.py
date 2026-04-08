@@ -1,9 +1,25 @@
+import datetime
+
 from django import forms
 
 from .models import Attachment, Note, Subtask, TodoItem, Topic
 
 
 class TodoItemForm(forms.ModelForm):
+    estimation_days = forms.IntegerField(
+        required=False,
+        min_value=0,
+        label="Estimation (days)",
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Days"}),
+    )
+    estimation_hours = forms.IntegerField(
+        required=False,
+        min_value=0,
+        max_value=23,
+        label="Estimation (hours)",
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "Hours"}),
+    )
+
     class Meta:
         model = TodoItem
         fields = [
@@ -14,7 +30,6 @@ class TodoItemForm(forms.ModelForm):
             "item_type",
             "topic",
             "state",
-            "estimation",
             "recurrence",
         ]
         widgets = {
@@ -27,11 +42,27 @@ class TodoItemForm(forms.ModelForm):
             "item_type": forms.TextInput(attrs={"class": "form-control"}),
             "topic": forms.Select(attrs={"class": "form-select"}),
             "state": forms.Select(attrs={"class": "form-select"}),
-            "estimation": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "e.g. 2:30:00"}
-            ),
             "recurrence": forms.Select(attrs={"class": "form-select"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.estimation:
+            total_seconds = int(self.instance.estimation.total_seconds())
+            self.fields["estimation_days"].initial = total_seconds // 86400
+            self.fields["estimation_hours"].initial = (total_seconds % 86400) // 3600
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        days = self.cleaned_data.get("estimation_days") or 0
+        hours = self.cleaned_data.get("estimation_hours") or 0
+        if days or hours:
+            instance.estimation = datetime.timedelta(days=days, hours=hours)
+        else:
+            instance.estimation = None
+        if commit:
+            instance.save()
+        return instance
 
 
 class TopicForm(forms.ModelForm):

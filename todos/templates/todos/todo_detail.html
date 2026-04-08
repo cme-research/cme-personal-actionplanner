@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load todo_filters %}
 
 {% block title %}{{ item.name }} - Action Planner{% endblock %}
 
@@ -49,7 +50,7 @@
 
         {% if item.estimation %}
         <p class="text-muted">
-            <i class="bi bi-hourglass-split"></i> Estimation: {{ item.estimation }}
+            <i class="bi bi-hourglass-split"></i> Estimation: {{ item.estimation|estimation_display }}
         </p>
         {% endif %}
 
