@@ -68,6 +68,7 @@ def list_todos(
             "topic": item.topic.name if item.topic else None,
             "item_type": item.item_type,
             "recurrence": item.recurrence,
+            "estimation": str(item.estimation) if item.estimation else None,
             "is_overdue": item.is_overdue,
             "subtasks": [
                 {"name": s.name, "completed": s.is_completed}
@@ -104,6 +105,7 @@ def get_todo(todo_id: str) -> dict:
         "topic": item.topic.name if item.topic else None,
         "item_type": item.item_type,
         "recurrence": item.recurrence,
+        "estimation": str(item.estimation) if item.estimation else None,
         "is_overdue": item.is_overdue,
         "notes": [
             {"content": n.content, "created_at": n.created_at.isoformat()}
@@ -129,6 +131,7 @@ def create_todo(
     topic: str | None = None,
     item_type: str = "",
     recurrence: str = "none",
+    estimation: str | None = None,
 ) -> dict:
     """Create a new todo item.
 
@@ -140,6 +143,7 @@ def create_todo(
         topic: Topic name (will be created if it doesn't exist)
         item_type: Free-form type label
         recurrence: none, daily, weekly, or monthly
+        estimation: Estimated effort as HH:MM:SS (e.g. 2:30:00)
     """
     import datetime
 
@@ -158,6 +162,17 @@ def create_todo(
         except ValueError:
             return {"error": f"Invalid date format: {due_date}. Use YYYY-MM-DD."}
 
+    parsed_estimation = None
+    if estimation:
+        try:
+            parts = estimation.split(":")
+            secs = int(parts[2]) if len(parts) > 2 else 0
+            parsed_estimation = datetime.timedelta(
+                hours=int(parts[0]), minutes=int(parts[1]), seconds=secs
+            )
+        except (ValueError, IndexError):
+            return {"error": f"Invalid estimation format: {estimation}. Use HH:MM or HH:MM:SS."}
+
     item = TodoItem.objects.create(
         name=name,
         description=description,
@@ -166,6 +181,7 @@ def create_todo(
         topic=topic_obj,
         item_type=item_type,
         recurrence=recurrence,
+        estimation=parsed_estimation,
         owner=owner,
     )
     ActivityLog.objects.create(todo_item=item, action="created", detail="Created via MCP")
@@ -182,6 +198,7 @@ def update_todo(
     state: str | None = None,
     topic: str | None = None,
     item_type: str | None = None,
+    estimation: str | None = None,
 ) -> dict:
     """Update an existing todo item. Only provided fields are changed.
 
@@ -194,6 +211,7 @@ def update_todo(
         state: New state (new, current_work, finished, wont_do)
         topic: New topic name
         item_type: New type label
+        estimation: Estimated effort as HH:MM:SS, or empty string to clear
     """
     import datetime
 
@@ -236,6 +254,19 @@ def update_todo(
     if item_type is not None:
         item.item_type = item_type
         changes.append("item_type")
+    if estimation is not None:
+        if estimation == "":
+            item.estimation = None
+        else:
+            try:
+                parts = estimation.split(":")
+                item.estimation = datetime.timedelta(
+                    hours=int(parts[0]), minutes=int(parts[1]),
+                    seconds=int(parts[2]) if len(parts) > 2 else 0,
+                )
+            except (ValueError, IndexError):
+                return {"error": f"Invalid estimation: {estimation}. Use HH:MM or HH:MM:SS."}
+        changes.append("estimation")
 
     item.save()
     ActivityLog.objects.create(

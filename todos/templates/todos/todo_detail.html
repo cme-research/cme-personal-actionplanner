@@ -47,6 +47,12 @@
         </p>
         {% endif %}
 
+        {% if item.estimation %}
+        <p class="text-muted">
+            <i class="bi bi-hourglass-split"></i> Estimation: {{ item.estimation }}
+        </p>
+        {% endif %}
+
         <!-- Description -->
         {% if item.description %}
         <div class="card mb-4">

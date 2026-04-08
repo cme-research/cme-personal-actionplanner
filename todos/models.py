@@ -49,6 +49,11 @@ class TodoItem(models.Model):
     state = models.CharField(
         max_length=15, choices=State.choices, default=State.NEW
     )
+    estimation = models.DurationField(
+        null=True,
+        blank=True,
+        help_text="Estimated effort (e.g. 2:30:00 for 2h 30min)",
+    )
     position = models.IntegerField(default=0)
     recurrence = models.CharField(
         max_length=10,

@@ -14,6 +14,7 @@ class TodoItemForm(forms.ModelForm):
             "item_type",
             "topic",
             "state",
+            "estimation",
             "recurrence",
         ]
         widgets = {
@@ -26,6 +27,9 @@ class TodoItemForm(forms.ModelForm):
             "item_type": forms.TextInput(attrs={"class": "form-control"}),
             "topic": forms.Select(attrs={"class": "form-select"}),
             "state": forms.Select(attrs={"class": "form-select"}),
+            "estimation": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "e.g. 2:30:00"}
+            ),
             "recurrence": forms.Select(attrs={"class": "form-select"}),
         }
 

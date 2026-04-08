@@ -383,6 +383,7 @@ def export_todos(request, fmt):
                     "topic": item.topic.name if item.topic else None,
                     "state": item.state,
                     "recurrence": item.recurrence,
+                    "estimation": str(item.estimation) if item.estimation else None,
                     "created_at": item.created_at.isoformat(),
                     "updated_at": item.updated_at.isoformat(),
                 }
@@ -407,6 +408,7 @@ def export_todos(request, fmt):
                 "topic",
                 "state",
                 "recurrence",
+                "estimation",
                 "created_at",
                 "updated_at",
             ]
@@ -423,6 +425,7 @@ def export_todos(request, fmt):
                     item.topic.name if item.topic else "",
                     item.state,
                     item.recurrence,
+                    str(item.estimation) if item.estimation else "",
                     item.created_at.isoformat(),
                     item.updated_at.isoformat(),
                 ]
