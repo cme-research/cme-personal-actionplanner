@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar - Action Planner{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        {{ month_name }} {{ year }}
+        <a href="?year={{ next_year }}&month={{ next_month }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+    </h2>
+    <a href="{% url 'todos:todo_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Todo
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered calendar-table">
+        <thead>
+            <tr>
+                <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th class="text-muted">Sat</th><th class="text-muted">Sun</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for week in month_cal %}
+            <tr>
+                {% for day in week %}
+                <td class="calendar-day {% if day == today.day and month == today.month and year == today.year %}bg-primary-subtle{% endif %}" style="vertical-align: top; height: 100px;">
+                    {% if day != 0 %}
+                    <div class="fw-bold mb-1">{{ day }}</div>
+                    {% for item in items_by_day|default_if_none:"" %}
+                    {% endfor %}
+                    {% with day_items=items_by_day %}
+                    {% for d, d_items in day_items.items %}
+                    {% if d == day %}
+                    {% for item in d_items %}
+                    <a href="{% url 'todos:todo_detail' pk=item.pk %}" class="d-block text-truncate small text-decoration-none mb-1">
+                        <span class="badge priority-{{ item.priority }} me-1" style="font-size: 0.65em;">{{ item.get_priority_display|first }}</span>
+                        {{ item.name }}
+                    </a>
+                    {% endfor %}
+                    {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

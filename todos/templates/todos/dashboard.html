@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Action Planner{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Dashboard</h2>
+    <a href="{% url 'todos:todo_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Todo
+    </a>
+</div>
+
+<!-- Status badges -->
+<div class="row g-3 mb-4">
+    <div class="col-auto">
+        <span class="badge bg-danger fs-6">
+            <i class="bi bi-exclamation-triangle"></i> Overdue: {{ overdue_count }}
+        </span>
+    </div>
+    <div class="col-auto">
+        <span class="badge bg-warning text-dark fs-6">
+            <i class="bi bi-clock"></i> Due Today: {{ due_today_count }}
+        </span>
+    </div>
+    <div class="col-auto">
+        <span class="badge bg-info text-dark fs-6">
+            <i class="bi bi-calendar-week"></i> This Week: {{ upcoming_count }}
+        </span>
+    </div>
+</div>
+
+<!-- Search & Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                {{ search_form.q }}
+            </div>
+            <div class="col-md-2">
+                {{ search_form.topic }}
+            </div>
+            <div class="col-md-2">
+                {{ search_form.state }}
+            </div>
+            <div class="col-md-2">
+                {{ search_form.priority }}
+            </div>
+            <div class="col-md-2">
+                {{ search_form.date_from }}
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Todo list -->
+<div class="list-group" id="todo-list">
+    {% for item in items %}
+    <div class="list-group-item list-group-item-action" data-id="{{ item.id }}">
+        <div class="d-flex w-100 justify-content-between align-items-start">
+            <div class="d-flex align-items-start gap-2 flex-grow-1">
+                <div class="drag-handle d-none d-md-block text-muted" style="cursor: grab;">
+                    <i class="bi bi-grip-vertical"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1">
+                        <a href="{% url 'todos:todo_detail' pk=item.pk %}" class="text-decoration-none">
+                            {{ item.name }}
+                        </a>
+                    </h6>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% if item.topic %}
+                        <span class="badge bg-secondary">{{ item.topic }}</span>
+                        {% endif %}
+                        <span class="badge priority-{{ item.priority }}">{{ item.get_priority_display }}</span>
+                        <span class="badge state-{{ item.state }}">{{ item.get_state_display }}</span>
+                        {% if item.recurrence != "none" %}
+                        <span class="badge bg-info text-dark">
+                            <i class="bi bi-arrow-repeat"></i> {{ item.get_recurrence_display }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="text-end text-nowrap ms-2">
+                {% if item.due_date %}
+                <small class="{% if item.is_overdue %}text-danger fw-bold{% elif item.is_due_today %}text-warning fw-bold{% else %}text-muted{% endif %}">
+                    <i class="bi bi-calendar-event"></i> {{ item.due_date }}
+                </small>
+                {% endif %}
+                <div class="mt-1">
+                    <form method="post" action="{% url 'todos:todo_change_state' pk=item.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'todos:dashboard' %}">
+                        {% if item.state == "new" %}
+                        <button name="state" value="current_work" class="btn btn-sm btn-outline-primary" title="Start working">
+                            <i class="bi bi-play-fill"></i>
+                        </button>
+                        {% elif item.state == "current_work" %}
+                        <button name="state" value="finished" class="btn btn-sm btn-outline-success" title="Mark done">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-inbox display-4"></i>
+        <p class="mt-2">No todos yet. Create your first one!</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

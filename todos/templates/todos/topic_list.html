@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Topics - Action Planner{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Topics</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="list-group mb-4">
+            {% for topic in topics %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ topic.name }}</strong>
+                    <span class="badge bg-secondary ms-2">{{ topic.items.count }} items</span>
+                </div>
+                <form method="post" action="{% url 'todos:topic_delete' pk=topic.pk %}" onsubmit="return confirm('Delete topic &quot;{{ topic.name }}&quot;? Items will keep their data but lose this topic.')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+            </div>
+            {% empty %}
+            <div class="list-group-item text-center text-muted py-4">
+                No topics yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Add Topic</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'todos:topic_create' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form.name }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-lg"></i> Create Topic
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

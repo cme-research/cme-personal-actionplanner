@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Kanban Board - Action Planner{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Kanban Board</h2>
+    <a href="{% url 'todos:todo_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> New Todo
+    </a>
+</div>
+
+<div class="row g-4">
+    {% for state, items in columns.items %}
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-body-secondary d-flex justify-content-between align-items-center">
+                <strong>{{ state.label }}</strong>
+                <span class="badge bg-secondary">{{ items|length }}</span>
+            </div>
+            <div class="card-body kanban-column" style="min-height: 200px;">
+                {% for item in items %}
+                <div class="card mb-2 kanban-card">
+                    <div class="card-body py-2 px-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <a href="{% url 'todos:todo_detail' pk=item.pk %}" class="text-decoration-none fw-semibold">
+                                    {{ item.name }}
+                                </a>
+                                <div class="d-flex flex-wrap gap-1 mt-1">
+                                    {% if item.topic %}
+                                    <span class="badge bg-secondary" style="font-size: 0.7em;">{{ item.topic }}</span>
+                                    {% endif %}
+                                    <span class="badge priority-{{ item.priority }}" style="font-size: 0.7em;">{{ item.get_priority_display }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <form method="post" action="{% url 'todos:todo_change_state' pk=item.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'todos:kanban' %}">
+                                    {% if item.state == "new" %}
+                                    <button name="state" value="current_work" class="btn btn-sm btn-outline-primary" title="Start">
+                                        <i class="bi bi-play-fill"></i>
+                                    </button>
+                                    {% else %}
+                                    <button name="state" value="finished" class="btn btn-sm btn-outline-success" title="Done">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </div>
+                        {% if item.due_date %}
+                        <small class="{% if item.is_overdue %}text-danger{% elif item.is_due_today %}text-warning{% else %}text-muted{% endif %} mt-1 d-block">
+                            <i class="bi bi-calendar-event"></i> {{ item.due_date }}
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox"></i> No items
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
