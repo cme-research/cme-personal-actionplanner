@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Action Planner{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <h2 class="mb-4">Profile Settings</h2>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <p class="text-muted mb-1">Username</p>
+                <p class="fw-semibold">{{ user.username }}</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Change Email</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.email.errors %}{{ error }}{% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Save
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">Change Password</div>
+            <div class="card-body">
+                <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-key"></i> Change Password
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
