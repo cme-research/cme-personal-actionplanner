@@ -34,23 +34,46 @@
                                     <span class="badge priority-{{ item.priority }}" style="font-size: 0.7em;">{{ item.get_priority_display }}</span>
                                 </div>
                             </div>
-                            {% if state.value != "finished" %}
-                            <div>
+                            <div class="d-flex gap-1">
+                                {% if item.state == "new" %}
                                 <form method="post" action="{% url 'todos:todo_change_state' pk=item.pk %}" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="next" value="{% url 'todos:kanban' %}">
-                                    {% if item.state == "new" %}
                                     <button name="state" value="current_work" class="btn btn-sm btn-outline-primary" title="Start">
                                         <i class="bi bi-play-fill"></i>
                                     </button>
-                                    {% else %}
+                                </form>
+                                <form method="post" action="{% url 'todos:todo_delete' pk=item.pk %}" class="d-inline" onsubmit="return confirm('Delete this todo?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                                {% elif item.state == "current_work" %}
+                                <form method="post" action="{% url 'todos:todo_change_state' pk=item.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'todos:kanban' %}">
                                     <button name="state" value="finished" class="btn btn-sm btn-outline-success" title="Done">
                                         <i class="bi bi-check-lg"></i>
                                     </button>
-                                    {% endif %}
                                 </form>
+                                <form method="post" action="{% url 'todos:todo_change_state' pk=item.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'todos:kanban' %}">
+                                    <button name="state" value="new" class="btn btn-sm btn-outline-secondary" title="Back to New">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </button>
+                                </form>
+                                {% elif item.state == "finished" %}
+                                <form method="post" action="{% url 'todos:todo_change_state' pk=item.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'todos:kanban' %}">
+                                    <button name="state" value="current_work" class="btn btn-sm btn-outline-warning" title="Reopen">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
                             </div>
-                            {% endif %}
                         </div>
                         {% if item.due_date %}
                         <small class="{% if item.is_overdue %}text-danger{% elif item.is_due_today %}text-warning{% else %}text-muted{% endif %} mt-1 d-block">
