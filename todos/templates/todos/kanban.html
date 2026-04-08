@@ -12,7 +12,7 @@
 
 <div class="row g-4">
     {% for state, items in columns.items %}
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-body-secondary d-flex justify-content-between align-items-center">
                 <strong>{{ state.label }}</strong>
@@ -20,12 +20,12 @@
             </div>
             <div class="card-body kanban-column" style="min-height: 200px;">
                 {% for item in items %}
-                <div class="card mb-2 kanban-card">
+                <div class="card mb-2 kanban-card {% if state.value == 'finished' %}opacity-75{% endif %}">
                     <div class="card-body py-2 px-3">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <a href="{% url 'todos:todo_detail' pk=item.pk %}" class="text-decoration-none fw-semibold">
-                                    {{ item.name }}
+                                <a href="{% url 'todos:todo_detail' pk=item.pk %}" class="text-decoration-none fw-semibold {% if state.value == 'finished' %}text-muted{% endif %}">
+                                    {% if state.value == "finished" %}<i class="bi bi-check-circle text-success"></i> {% endif %}{{ item.name }}
                                 </a>
                                 <div class="d-flex flex-wrap gap-1 mt-1">
                                     {% if item.topic %}
@@ -34,6 +34,7 @@
                                     <span class="badge priority-{{ item.priority }}" style="font-size: 0.7em;">{{ item.get_priority_display }}</span>
                                 </div>
                             </div>
+                            {% if state.value != "finished" %}
                             <div>
                                 <form method="post" action="{% url 'todos:todo_change_state' pk=item.pk %}" class="d-inline">
                                     {% csrf_token %}
@@ -49,6 +50,7 @@
                                     {% endif %}
                                 </form>
                             </div>
+                            {% endif %}
                         </div>
                         {% if item.due_date %}
                         <small class="{% if item.is_overdue %}text-danger{% elif item.is_due_today %}text-warning{% else %}text-muted{% endif %} mt-1 d-block">

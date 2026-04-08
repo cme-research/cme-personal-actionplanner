@@ -270,12 +270,17 @@ def todo_reorder(request):
 
 
 def kanban_board(request):
-    items = TodoItem.objects.filter(owner=request.user).exclude(
+    active = TodoItem.objects.filter(owner=request.user).exclude(
         state__in=[TodoItem.State.FINISHED, TodoItem.State.WONT_DO]
     )
+    done = (
+        TodoItem.objects.filter(owner=request.user, state=TodoItem.State.FINISHED)
+        .order_by("-updated_at")[:10]
+    )
     columns = {
-        TodoItem.State.NEW: items.filter(state=TodoItem.State.NEW),
-        TodoItem.State.CURRENT_WORK: items.filter(state=TodoItem.State.CURRENT_WORK),
+        TodoItem.State.NEW: active.filter(state=TodoItem.State.NEW),
+        TodoItem.State.CURRENT_WORK: active.filter(state=TodoItem.State.CURRENT_WORK),
+        TodoItem.State.FINISHED: done,
     }
     return render(request, "todos/kanban.html", {"columns": columns})
 
