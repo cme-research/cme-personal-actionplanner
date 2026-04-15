@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "actionplanner": {
+      "command": "/home/cme/git/cme_ws/src/cme-personal-actionplanner/.venv/bin/python",
+      "args": ["-m", "mcp_server.server"],
+      "cwd": "/home/cme/git/cme_ws/src/cme-personal-actionplanner"
+    }
+  }
+}

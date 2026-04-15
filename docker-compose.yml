@@ -12,6 +12,22 @@ services:
       - media_data:/app/media
     restart: unless-stopped
 
+  mcp:
+    build: .
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env.prod
+    environment:
+      - DJANGO_DEBUG=False
+    volumes:
+      - db_data:/app/data
+      - media_data:/app/media
+    command: ["python", "-m", "mcp_server.server", "--transport", "sse", "--port", "8001"]
+    restart: unless-stopped
+    depends_on:
+      - web
+
 volumes:
   db_data:
   media_data:
