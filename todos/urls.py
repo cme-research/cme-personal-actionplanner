@@ -7,6 +7,7 @@ app_name = "todos"
 urlpatterns = [
     # Dashboard
     path("", views.dashboard, name="dashboard"),
+    path("today/", views.today_view, name="today"),
     # CRUD
     path("create/", views.todo_create, name="todo_create"),
     path("<uuid:pk>/", views.todo_detail, name="todo_detail"),

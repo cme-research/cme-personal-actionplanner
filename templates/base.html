@@ -27,6 +27,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'today' %}active{% endif %}" href="{% url 'todos:today' %}">
+                            <i class="bi bi-sun"></i> Today
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'kanban' %}active{% endif %}" href="{% url 'todos:kanban' %}">
                             <i class="bi bi-kanban"></i> Kanban
                         </a>

@@ -18,7 +18,15 @@ from .forms import (
     TodoItemForm,
     TopicForm,
 )
+from .ai import ai_sort_todos
 from .models import ActivityLog, Attachment, Note, Subtask, TodoItem, Topic
+
+_PRIORITY_ORDER = {
+    TodoItem.Priority.URGENT: 0,
+    TodoItem.Priority.HIGH: 1,
+    TodoItem.Priority.MEDIUM: 2,
+    TodoItem.Priority.LOW: 3,
+}
 
 
 def _log_activity(item, action, detail=""):
@@ -52,6 +60,76 @@ def dashboard(request):
         "topics": Topic.objects.all(),
     }
     return render(request, "todos/dashboard.html", context)
+
+
+# --- Today view ---
+
+
+def today_view(request):
+    today = date.today()
+    items = list(
+        TodoItem.objects.filter(owner=request.user, due_date__lte=today)
+        .exclude(state__in=[TodoItem.State.FINISHED, TodoItem.State.WONT_DO])
+        .select_related("topic")
+    )
+
+    sort_mode = request.GET.get("sort", "priority")
+    ai_error = None
+
+    if sort_mode == "ai":
+        if not items:
+            sort_mode = "priority"
+        else:
+            cache_key = f"today_ai_sort_{today.isoformat()}"
+            refresh = request.GET.get("refresh") == "1"
+            ai_results = None if refresh else request.session.get(cache_key)
+
+            if not ai_results:
+                try:
+                    todo_dicts = [
+                        {
+                            "id": str(t.id),
+                            "name": t.name,
+                            "description": t.description,
+                            "due_date": str(t.due_date) if t.due_date else None,
+                            "priority": t.priority,
+                            "topic": t.topic.name if t.topic else None,
+                            "estimation": str(t.estimation) if t.estimation else None,
+                        }
+                        for t in items
+                    ]
+                    ai_results = ai_sort_todos(todo_dicts)
+                    request.session[cache_key] = ai_results
+                except Exception as exc:
+                    ai_error = str(exc)
+                    sort_mode = "priority"
+
+            if ai_results:
+                order_map = {r["id"]: i for i, r in enumerate(ai_results)}
+                reasoning_map = {r["id"]: r.get("reasoning", "") for r in ai_results}
+                items.sort(key=lambda t: order_map.get(str(t.id), 999))
+                for item in items:
+                    item.ai_reasoning = reasoning_map.get(str(item.id), "")
+
+    if sort_mode == "priority":
+        items.sort(key=lambda t: (
+            0 if t.due_date < today else 1,
+            _PRIORITY_ORDER.get(t.priority, 99),
+        ))
+
+    total_estimation = sum((t.estimation for t in items if t.estimation), timedelta())
+    total_hours = int(total_estimation.total_seconds() // 3600)
+    total_minutes = int((total_estimation.total_seconds() % 3600) // 60)
+
+    return render(request, "todos/today.html", {
+        "items": items,
+        "sort_mode": sort_mode,
+        "ai_error": ai_error,
+        "today": today,
+        "total_hours": total_hours,
+        "total_minutes": total_minutes,
+        "overdue_count": sum(1 for t in items if t.due_date < today),
+    })
 
 
 # --- CRUD ---
